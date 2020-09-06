@@ -2,7 +2,7 @@
   <div class="canvas">
     <canvas id="canvas" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" @click="resetGrid()">Reset</b-button>
-    <b-button class="mx-1" @click="renderCells()">Render</b-button>
+    <b-button class="mx-1" @click="advanceGeneration()">Next gen</b-button>
   </div>
 </template>
 
@@ -115,6 +115,39 @@ export default class Canvas extends Vue {
     const cellPos = this.getCellOnCanvas(pos.x, pos.y);
     this.flipCellState(cellPos.x, cellPos.y);
     this.renderCell(cellPos.x, cellPos.y);
+    //console.log(cellPos, this.getNeighbours(cellPos.x, cellPos.y));
+  }
+
+  getNeighbours(x: number, y: number) {
+    let n = 0;
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if (i === 0 && j === 0) continue;
+        const nX = x + i;
+        const nY = y + j;
+        if (nX < 0 || nY < 0 || nX >= this.gridSize.w || nY >= this.gridSize.h)
+          continue;
+        if (this.cells[nX][nY]) {
+          n++;
+        }
+      }
+    }
+    return n;
+  }
+
+  advanceGeneration() {
+    const tempCells = Array(this.gridSize.w);
+
+    this.cells.forEach((col, x) => {
+      tempCells[x] = Array(this.gridSize.h);
+
+      col.forEach((cell, y) => {
+        const neighbours = this.getNeighbours(x, y);
+        tempCells[x][y] = neighbours === 3 || (cell && neighbours === 2);
+      });
+    });
+    this.cells = tempCells;
+    this.renderCells();
   }
 }
 </script>
