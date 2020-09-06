@@ -13,8 +13,8 @@ function getPosition(event: MouseEvent) {
   const rect = (event.target as HTMLElement).getBoundingClientRect();
   //const x = event.clientX - Math.round(rect.left);
   //const y = event.clientY - Math.round(rect.top);
-  const x = event.clientX - rect.left - 0.5;
-  const y = event.clientY - rect.top - 0.5;
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
   return { x, y };
 }
 
@@ -22,6 +22,7 @@ function getPosition(event: MouseEvent) {
 export default class Canvas extends Vue {
   @Prop() private width!: number;
   @Prop() private height!: number;
+  colors = { bg: "white", cell: "black", grid: "lightgray" };
   value = 0;
   cellSize = 16;
   canvas!: HTMLCanvasElement;
@@ -38,6 +39,13 @@ export default class Canvas extends Vue {
       .fill(null)
       .map(() => Array(this.gridSize.h).fill(false));
     this.resetGrid(false);
+  }
+
+  getCellOnCanvas(canvasX: number, canvasY: number) {
+    return {
+      x: Math.floor((canvasX - 0.5) / this.cellSize),
+      y: Math.floor((canvasY - 0.5) / this.cellSize)
+    };
   }
 
   getCellState(x: number, y: number) {
@@ -57,14 +65,14 @@ export default class Canvas extends Vue {
         col.fill(false);
       });
     }
-    ctx.fillStyle = "white";
+    ctx.fillStyle = this.colors.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawGrid();
   }
 
   drawGrid() {
     const ctx = this.canvas.getContext("2d")!;
-    ctx.strokeStyle = "lightgray";
+    ctx.strokeStyle = this.colors.grid;
     for (let x = 0.5; x < this.canvas.width; x += this.cellSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0.5);
@@ -81,7 +89,7 @@ export default class Canvas extends Vue {
 
   drawCell(x: number, y: number, isAlive = true) {
     const ctx = this.canvas.getContext("2d")!;
-    ctx.fillStyle = isAlive ? "black" : "white";
+    ctx.fillStyle = isAlive ? this.colors.cell : this.colors.bg;
     ctx.fillRect(
       x * this.cellSize + 1,
       y * this.cellSize + 1,
@@ -103,12 +111,10 @@ export default class Canvas extends Vue {
   }
 
   placeCell(event: MouseEvent) {
-    const ctx = this.canvas.getContext("2d")!;
     const pos = getPosition(event);
-    const cellX = Math.floor(pos.x / this.cellSize);
-    const cellY = Math.floor(pos.y / this.cellSize);
-    this.flipCellState(cellX, cellY);
-    this.renderCell(cellX, cellY);
+    const cellPos = this.getCellOnCanvas(pos.x, pos.y);
+    this.flipCellState(cellPos.x, cellPos.y);
+    this.renderCell(cellPos.x, cellPos.y);
   }
 }
 </script>
