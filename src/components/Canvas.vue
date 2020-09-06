@@ -3,6 +3,7 @@
     <canvas id="canvas" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" @click="advanceGeneration()">Next gen</b-button>
+    <output class="ml-2 lead">{{generations}}</output>
   </div>
 </template>
 
@@ -23,7 +24,7 @@ export default class Canvas extends Vue {
   @Prop() private width!: number;
   @Prop() private height!: number;
   colors = { bg: "white", cell: "black", grid: "lightgray" };
-  value = 0;
+  generations = 0;
   cellSize = 16;
   canvas!: HTMLCanvasElement;
   gridSize!: { w: number; h: number };
@@ -64,6 +65,7 @@ export default class Canvas extends Vue {
       this.cells.forEach(col => {
         col.fill(false);
       });
+      this.generations = 0;
     }
     ctx.fillStyle = this.colors.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -148,6 +150,7 @@ export default class Canvas extends Vue {
     });
     this.cells = tempCells;
     this.renderCells();
+    this.generations++;
   }
 }
 </script>
