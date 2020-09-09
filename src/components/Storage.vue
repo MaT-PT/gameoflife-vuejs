@@ -34,7 +34,7 @@ export default class Storage extends Vue {
   log = console.log;
   @Prop() private gridToSave?: SavedGrid;
   static readonly PREFIX = "GRID:";
-  selectedSave?: SavedGrid | null = null;
+  selectedSave?: string | null = null;
   savename?: string = "";
   options: SelectOptionList = [];
 
@@ -60,7 +60,7 @@ export default class Storage extends Vue {
       .filter(([k]) => k.startsWith(Storage.PREFIX))
       .map(([k, v]) => ({
         text: k.slice(Storage.PREFIX.length),
-        value: JSON.parse(v) as SavedGrid
+        value: v
       }))
       .forEach(o => {
         this.options.push(o);
@@ -72,7 +72,8 @@ export default class Storage extends Vue {
   }
 
   loadGrid() {
-    this.$emit("loadgrid", this.selectedSave);
+    if (this.selectedSave)
+      this.$emit("loadgrid", JSON.parse(this.selectedSave) as SavedGrid);
   }
 }
 </script>
