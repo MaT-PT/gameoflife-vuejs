@@ -1,6 +1,6 @@
 <template>
-  <div class="col">
-    <canvas id="canvas" :width="width" :height="height" @click.left="placeCell"></canvas>
+  <div class="col mx-5 my-2">
+    <canvas id="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" @click="advanceGeneration()">Next gen</b-button>
     <output class="ml-2 lead">{{ generation }}</output>

@@ -1,5 +1,5 @@
 <template>
-  <div class="col-auto mx-5">
+  <div class="col-auto mx-5 my-2">
     <b-form @submit.prevent="requestGrid()">
       <b-form-group label="Saved grids">
         <b-form-select
