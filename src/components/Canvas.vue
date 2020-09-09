@@ -1,14 +1,15 @@
 <template>
-  <div class="canvas">
+  <div class="col">
     <canvas id="canvas" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" @click="advanceGeneration()">Next gen</b-button>
-    <output class="ml-2 lead">{{generations}}</output>
+    <output class="ml-2 lead">{{ generation }}</output>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Grid, SavedGrid } from "../types/grid";
 
 function getPosition(event: MouseEvent) {
   const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -23,12 +24,56 @@ function getPosition(event: MouseEvent) {
 export default class Canvas extends Vue {
   @Prop() private width!: number;
   @Prop() private height!: number;
+  @Prop() private gridToLoad?: Grid;
+  @Prop() private gridRequests?: number;
+  private readonly initialGrid = [
+    [],
+    [],
+    [],
+    [],
+    [0, 0, 0, 0, 0, 0, 1, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+    [0, 0, 0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 1],
+    [],
+    [],
+    [0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 1, 0, 0, 0, 1],
+    [],
+    [0, 0, 1, 1, 0, 0, 0, 1, 1],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [0, 0, 0, 0, 1, 1],
+    [0, 0, 0, 0, 1, 1]
+  ];
   colors = { bg: "white", cell: "black", grid: "lightgray" };
-  generations = 0;
+  generation = 0;
   cellSize = 16;
   canvas!: HTMLCanvasElement;
   gridSize!: { w: number; h: number };
-  cells!: boolean[][];
+  cells!: Grid;
 
   mounted() {
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -40,6 +85,25 @@ export default class Canvas extends Vue {
       .fill(null)
       .map(() => Array(this.gridSize.h).fill(false));
     this.resetGrid(false);
+
+    this.initialGrid.forEach((col, i) => {
+      col.forEach((cell, j) => (this.cells[i][j] = !!cell));
+    });
+    this.renderCells()
+  }
+
+  @Watch("gridToLoad")
+  onGridToLoadChanged(newGrid: SavedGrid) {
+    if (newGrid && newGrid.grid.length > 0) {
+      this.cells = newGrid.grid;
+      this.generation = newGrid.generation;
+      this.renderCells();
+    }
+  }
+
+  @Watch("gridRequests")
+  onGridRequestsChanged() {
+    this.$emit("savegrid", { generation: this.generation, grid: this.cells });
   }
 
   getCellOnCanvas(canvasX: number, canvasY: number) {
@@ -65,7 +129,7 @@ export default class Canvas extends Vue {
       this.cells.forEach(col => {
         col.fill(false);
       });
-      this.generations = 0;
+      this.generation = 0;
     }
     ctx.fillStyle = this.colors.bg;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -150,7 +214,7 @@ export default class Canvas extends Vue {
     });
     this.cells = tempCells;
     this.renderCells();
-    this.generations++;
+    this.generation++;
   }
 }
 </script>
@@ -159,7 +223,7 @@ export default class Canvas extends Vue {
 <style scoped>
 canvas {
   display: block;
-  margin: 1em auto;
+  margin: auto;
   /*outline: 1px solid gray;*/
   background-color: white;
 }
