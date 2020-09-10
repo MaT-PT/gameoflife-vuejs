@@ -3,7 +3,25 @@
     <canvas id="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" variant="danger" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" variant="primary" @click="advanceGeneration()">Next gen</b-button>
-    <output class="ml-2 lead">{{ generation }}</output>
+    <output class="ml-2 align-middle lead">Gen: {{ generation }}</output>
+    <b-input
+      type="range"
+      v-model="speed"
+      number
+      class="w-25 ml-5 mr-3 align-middle"
+      min="0.1"
+      max="100"
+      step="0.1"
+    ></b-input>
+    <b-button
+      class="p-0 align-middle play-pause"
+      variant="outline"
+      size="lg"
+      style="line-height: 1; border: none;"
+      @click="onPlayPause"
+      :playing="isPlaying"
+    ></b-button>
+    <output class="ml-2 align-middle">Speed: {{ speed.toFixed(1) }}</output>
   </div>
 </template>
 
@@ -70,10 +88,12 @@ export default class Canvas extends Vue {
   ];
   colors = { bg: "white", cell: "black", grid: "lightgray" };
   generation = 0;
+  speed = 1;
   cellSize = 16;
   canvas!: HTMLCanvasElement;
   gridSize!: { w: number; h: number };
   cells!: Grid;
+  isPlaying = false;
 
   mounted() {
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -106,6 +126,21 @@ export default class Canvas extends Vue {
     this.$emit("savegrid", { generation: this.generation, grid: this.cells });
   }
 
+  onPlayPause(event: MouseEvent) {
+    const btn = event.target as HTMLButtonElement;
+    this.isPlaying = !this.isPlaying;
+    if (this.isPlaying) {
+      this.doAutoPlay();
+    }
+  }
+
+  doAutoPlay() {
+    if (this.isPlaying) {
+      this.advanceGeneration();
+      window.setTimeout(this.doAutoPlay, 250 / this.speed);
+    }
+  }
+
   getCellOnCanvas(canvasX: number, canvasY: number) {
     return {
       x: Math.floor((canvasX - 0.5) / this.cellSize),
@@ -124,6 +159,7 @@ export default class Canvas extends Vue {
   }
 
   resetGrid(resetStates = true) {
+    this.isPlaying = false;
     const ctx = this.canvas.getContext("2d")!;
     if (resetStates) {
       this.cells.forEach(col => {
@@ -226,5 +262,11 @@ canvas {
   margin: auto;
   /*outline: 1px solid gray;*/
   background-color: white;
+}
+.play-pause:before {
+  content: "▶️";
+}
+.play-pause[playing]:before {
+  content: "⏸️";
 }
 </style>
