@@ -1,8 +1,8 @@
 <template>
   <div class="col mx-5 my-2">
     <canvas id="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
-    <b-button class="mx-1" @click="resetGrid()">Reset</b-button>
-    <b-button class="mx-1" @click="advanceGeneration()">Next gen</b-button>
+    <b-button class="mx-1" variant="danger" @click="resetGrid()">Reset</b-button>
+    <b-button class="mx-1" variant="primary" @click="advanceGeneration()">Next gen</b-button>
     <output class="ml-2 lead">{{ generation }}</output>
   </div>
 </template>
@@ -89,7 +89,7 @@ export default class Canvas extends Vue {
     this.initialGrid.forEach((col, i) => {
       col.forEach((cell, j) => (this.cells[i][j] = !!cell));
     });
-    this.renderCells()
+    this.renderCells();
   }
 
   @Watch("gridToLoad")
