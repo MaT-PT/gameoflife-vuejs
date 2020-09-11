@@ -3,7 +3,7 @@
     <canvas ref="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" variant="danger" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" variant="primary" @click="advanceGeneration()">Next gen</b-button>
-    <output class="ml-2 align-middle lead">Gen: {{ generation }}</output>
+    <output class="ml-2 align-middle text-left lead" style="width: 6em;">Gen: {{ generation }}</output>
     <b-input
       type="range"
       v-model="speed"
@@ -21,13 +21,16 @@
       @click="onPlayPause"
       :playing="isPlaying"
     ></b-button>
-    <output class="ml-2 align-middle">Speed: {{ speed.toFixed(1) }}</output>
+    <output class="ml-2 align-middle text-left" style="width: 7em;">Speed: {{ speed.toFixed(1) }}</output>
+    <RulesModal />
+    <b-button v-b-modal.rules-modal>Choose rules</b-button>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Emit, Prop, Ref, Vue, Watch } from "vue-property-decorator";
 import { Grid, SavedGrid } from "../types/grid";
+import RulesModal from "./RulesModal.vue";
 
 function getPosition(event: MouseEvent) {
   const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -38,12 +41,17 @@ function getPosition(event: MouseEvent) {
   return { x, y };
 }
 
-@Component
+@Component({
+  components: {
+    RulesModal
+  }
+})
 export default class Canvas extends Vue {
   @Prop() private width!: number;
   @Prop() private height!: number;
   @Prop() private gridToLoad?: Grid;
   @Prop() private gridRequests?: number;
+  @Ref() readonly canvas!: HTMLCanvasElement;
   private readonly initialGrid = [
     [],
     [],
@@ -90,13 +98,11 @@ export default class Canvas extends Vue {
   generation = 0;
   speed = 1;
   cellSize = 16;
-  canvas!: HTMLCanvasElement;
   gridSize!: { w: number; h: number };
   cells!: Grid;
   isPlaying = false;
 
   mounted() {
-    this.canvas = this.$refs["canvas"] as HTMLCanvasElement;
     this.gridSize = {
       w: Math.floor(this.canvas.width / this.cellSize),
       h: Math.floor(this.canvas.height / this.cellSize)
@@ -122,12 +128,12 @@ export default class Canvas extends Vue {
   }
 
   @Watch("gridRequests")
+  @Emit("save-grid")
   onGridRequestsChanged() {
-    this.$emit("savegrid", { generation: this.generation, grid: this.cells });
+    return { generation: this.generation, grid: this.cells };
   }
 
-  onPlayPause(event: MouseEvent) {
-    const btn = event.target as HTMLButtonElement;
+  onPlayPause() {
     this.isPlaying = !this.isPlaying;
     if (this.isPlaying) {
       this.doAutoPlay();

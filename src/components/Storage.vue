@@ -12,10 +12,10 @@
         ></b-form-select>
       </b-form-group>
       <b-form-group>
-        <b-button :disabled="selectedSave === null" @click="loadGrid()">Load</b-button>
+        <b-button :disabled="!selectedSave" @click="loadGrid()">Load</b-button>
       </b-form-group>
       <b-form-group label="Save current grid">
-        <b-form-input @dblclick="log" v-model="savename" placeholder="Enter a name" required></b-form-input>
+        <b-form-input v-model="savename" placeholder="Enter a name" required></b-form-input>
       </b-form-group>
       <b-form-group>
         <b-button type="submit">Save</b-button>
@@ -25,13 +25,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, Emit, Prop, Vue, Watch } from "vue-property-decorator";
 import { SavedGrid } from "../types/grid";
 import { SelectOptionList } from "../types/selectoptionlist";
 
 @Component
 export default class Storage extends Vue {
-  log = console.log;
   @Prop() private gridToSave?: SavedGrid;
   static readonly PREFIX = "GRID:";
   selectedSave?: string | null = null;
@@ -67,13 +66,14 @@ export default class Storage extends Vue {
       });
   }
 
+  @Emit()
   requestGrid() {
-    this.$emit("requestgrid");
+    return;
   }
 
+  @Emit()
   loadGrid() {
-    if (this.selectedSave)
-      this.$emit("loadgrid", JSON.parse(this.selectedSave) as SavedGrid);
+    return JSON.parse(this.selectedSave!) as SavedGrid;
   }
 }
 </script>

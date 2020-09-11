@@ -1,13 +1,20 @@
 <template>
   <div id="app" class="container-fluid mt-3">
     <div class="row justify-content-center">
-      <Canvas width="1281" height="721" :gridToLoad="gridToLoad" :gridRequests="gridRequests" @savegrid="onSaveGrid" />
-      <Storage :gridToSave="gridToSave" @loadgrid="onLoadGrid" @requestgrid="gridRequests++" />
+      <Canvas
+        :width="1281"
+        :height="721"
+        :gridToLoad="gridToLoad"
+        :gridRequests="gridRequests"
+        @save-grid="onSaveGrid"
+      />
+      <Storage :gridToSave="gridToSave" @load-grid="onLoadGrid" @request-grid="gridRequests++" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import "reflect-metadata";
 import { Component, Vue } from "vue-property-decorator";
 import Canvas from "./components/Canvas.vue";
 import Storage from "./components/Storage.vue";
