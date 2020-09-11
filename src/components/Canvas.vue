@@ -1,6 +1,6 @@
 <template>
   <div class="col mx-5 my-2">
-    <canvas id="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
+    <canvas ref="canvas" class="mb-2" :width="width" :height="height" @click.left="placeCell"></canvas>
     <b-button class="mx-1" variant="danger" @click="resetGrid()">Reset</b-button>
     <b-button class="mx-1" variant="primary" @click="advanceGeneration()">Next gen</b-button>
     <output class="ml-2 align-middle lead">Gen: {{ generation }}</output>
@@ -96,7 +96,7 @@ export default class Canvas extends Vue {
   isPlaying = false;
 
   mounted() {
-    this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    this.canvas = this.$refs["canvas"] as HTMLCanvasElement;
     this.gridSize = {
       w: Math.floor(this.canvas.width / this.cellSize),
       h: Math.floor(this.canvas.height / this.cellSize)
