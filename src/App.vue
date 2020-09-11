@@ -4,11 +4,15 @@
       <Canvas
         :width="1281"
         :height="721"
-        :gridToLoad="gridToLoad"
-        :gridRequests="gridRequests"
-        @save-grid="onSaveGrid"
+        :gridtoload.sync="gridToLoad"
+        :gridtosave.sync="gridToSave"
+        :gridrequests.sync="gridRequests"
       />
-      <Storage :gridToSave="gridToSave" @load-grid="onLoadGrid" @request-grid="gridRequests++" />
+      <Storage
+        :gridtoload.sync="gridToLoad"
+        :gridtosave.sync="gridToSave"
+        :gridrequests.sync="gridRequests"
+      />
     </div>
   </div>
 </template>
@@ -16,6 +20,7 @@
 <script lang="ts">
 import "reflect-metadata";
 import { Component, Vue } from "vue-property-decorator";
+import { SavedGrid } from "./types/grid";
 import Canvas from "./components/Canvas.vue";
 import Storage from "./components/Storage.vue";
 
@@ -26,16 +31,9 @@ import Storage from "./components/Storage.vue";
   }
 })
 export default class App extends Vue {
-  gridToLoad?: boolean[][] = [[]];
-  gridToSave?: boolean[][] = [[]];
-  gridRequests = 0;
-
-  onSaveGrid(grid: boolean[][]) {
-    this.gridToSave = grid;
-  }
-  onLoadGrid(grid: boolean[][]) {
-    this.gridToLoad = grid;
-  }
+  private readonly gridToLoad: SavedGrid = { generation: 0, grid: [] };
+  private readonly gridToSave: SavedGrid = { generation: 0, grid: [] };
+  private readonly gridRequests = 0;
 }
 </script>
 
@@ -49,6 +47,5 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  /*margin-top: 1em;*/
 }
 </style>

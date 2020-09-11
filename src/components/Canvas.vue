@@ -28,7 +28,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Emit, Prop, Ref, Vue, Watch } from "vue-property-decorator";
+import {
+  Component,
+  Prop,
+  PropSync,
+  Ref,
+  Vue,
+  Watch
+} from "vue-property-decorator";
 import { Grid, SavedGrid } from "../types/grid";
 import RulesModal from "./RulesModal.vue";
 
@@ -49,9 +56,11 @@ function getPosition(event: MouseEvent) {
 export default class Canvas extends Vue {
   @Prop() private width!: number;
   @Prop() private height!: number;
-  @Prop() private gridToLoad?: Grid;
-  @Prop() private gridRequests?: number;
-  @Ref() readonly canvas!: HTMLCanvasElement;
+  @PropSync("gridtoload") private readonly gridToLoadSync?: SavedGrid;
+  @PropSync("gridtosave") private gridToSaveSync!: SavedGrid;
+  @PropSync("gridrequests") private readonly gridRequestsSync!: number;
+  @Ref() private readonly canvas!: HTMLCanvasElement;
+
   private readonly initialGrid = [
     [],
     [],
@@ -94,18 +103,18 @@ export default class Canvas extends Vue {
     [0, 0, 0, 0, 1, 1],
     [0, 0, 0, 0, 1, 1]
   ];
-  colors = { bg: "white", cell: "black", grid: "lightgray" };
-  generation = 0;
-  speed = 1;
-  cellSize = 16;
-  gridSize!: { w: number; h: number };
-  cells!: Grid;
-  isPlaying = false;
+  private readonly CELL_SIZE = 16;
+  private colors = { bg: "white", cell: "black", grid: "lightgray" };
+  private generation = 0;
+  private speed = 1;
+  private gridSize!: { w: number; h: number };
+  private cells!: Grid;
+  private isPlaying = false;
 
   mounted() {
     this.gridSize = {
-      w: Math.floor(this.canvas.width / this.cellSize),
-      h: Math.floor(this.canvas.height / this.cellSize)
+      w: Math.floor(this.canvas.width / this.CELL_SIZE),
+      h: Math.floor(this.canvas.height / this.CELL_SIZE)
     };
     this.cells = Array(this.gridSize.w)
       .fill(null)
@@ -118,7 +127,7 @@ export default class Canvas extends Vue {
     this.renderCells();
   }
 
-  @Watch("gridToLoad")
+  @Watch("gridToLoadSync")
   onGridToLoadChanged(newGrid: SavedGrid) {
     if (newGrid && newGrid.grid.length > 0) {
       this.cells = newGrid.grid;
@@ -127,10 +136,9 @@ export default class Canvas extends Vue {
     }
   }
 
-  @Watch("gridRequests")
-  @Emit("save-grid")
+  @Watch("gridRequestsSync")
   onGridRequestsChanged() {
-    return { generation: this.generation, grid: this.cells };
+    this.gridToSaveSync = { generation: this.generation, grid: this.cells };
   }
 
   onPlayPause() {
@@ -149,8 +157,8 @@ export default class Canvas extends Vue {
 
   getCellOnCanvas(canvasX: number, canvasY: number) {
     return {
-      x: Math.floor((canvasX - 0.5) / this.cellSize),
-      y: Math.floor((canvasY - 0.5) / this.cellSize)
+      x: Math.floor((canvasX - 0.5) / this.CELL_SIZE),
+      y: Math.floor((canvasY - 0.5) / this.CELL_SIZE)
     };
   }
 
@@ -181,13 +189,13 @@ export default class Canvas extends Vue {
   drawGrid() {
     const ctx = this.canvas.getContext("2d")!;
     ctx.strokeStyle = this.colors.grid;
-    for (let x = 0.5; x < this.canvas.width; x += this.cellSize) {
+    for (let x = 0.5; x < this.canvas.width; x += this.CELL_SIZE) {
       ctx.beginPath();
       ctx.moveTo(x, 0.5);
       ctx.lineTo(x, this.canvas.height + 0.5);
       ctx.stroke();
     }
-    for (let y = 0.5; y < this.canvas.height; y += this.cellSize) {
+    for (let y = 0.5; y < this.canvas.height; y += this.CELL_SIZE) {
       ctx.beginPath();
       ctx.moveTo(0.5, y);
       ctx.lineTo(this.canvas.width + 0.5, y);
@@ -199,10 +207,10 @@ export default class Canvas extends Vue {
     const ctx = this.canvas.getContext("2d")!;
     ctx.fillStyle = isAlive ? this.colors.cell : this.colors.bg;
     ctx.fillRect(
-      x * this.cellSize + 1,
-      y * this.cellSize + 1,
-      this.cellSize - 1,
-      this.cellSize - 1
+      x * this.CELL_SIZE + 1,
+      y * this.CELL_SIZE + 1,
+      this.CELL_SIZE - 1,
+      this.CELL_SIZE - 1
     );
   }
 

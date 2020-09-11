@@ -1,6 +1,6 @@
 <template>
   <div class="col-auto mx-5 my-2">
-    <b-form @submit.prevent="requestGrid()">
+    <b-form @submit.prevent="gridRequestsSync++">
       <b-form-group label="Saved grids">
         <b-form-select
           v-model="selectedSave"
@@ -25,28 +25,34 @@
 </template>
 
 <script lang="ts">
-import { Component, Emit, Prop, Vue, Watch } from "vue-property-decorator";
+import { Component, PropSync, Vue, Watch } from "vue-property-decorator";
 import { SavedGrid } from "../types/grid";
 import { SelectOptionList } from "../types/selectoptionlist";
 
 @Component
 export default class Storage extends Vue {
-  @Prop() private gridToSave?: SavedGrid;
-  static readonly PREFIX = "GRID:";
-  selectedSave?: string | null = null;
-  savename?: string = "";
-  options: SelectOptionList = [];
+  @PropSync("gridtoload") private gridToLoadSync?: SavedGrid;
+  @PropSync("gridtosave") private readonly gridToSaveSync!: SavedGrid;
+  @PropSync("gridrequests") private gridRequestsSync!: number;
+
+  private readonly PREFIX = "GRID:";
+  private readonly comparator = new Intl.Collator(undefined, {
+    sensitivity: "base"
+  }).compare;
+  private selectedSave?: string | null = null;
+  private savename?: string = "";
+  private options: SelectOptionList = [];
 
   mounted() {
     (window as any)._loadGrid = this.loadGrid; // Ugly hack because @dblclick doesn't seem to work on <b-form-select> :(
     this.refreshSavedGrids();
   }
 
-  @Watch("gridToSave")
+  @Watch("gridToSaveSync")
   onGridToSaveChanged(newGrid: SavedGrid) {
-    if (newGrid && newGrid.grid.length > 0) {
+    if (newGrid.grid.length > 0) {
       localStorage.setItem(
-        Storage.PREFIX + this.savename,
+        this.PREFIX + this.savename,
         JSON.stringify(newGrid)
       );
       this.refreshSavedGrids();
@@ -55,25 +61,27 @@ export default class Storage extends Vue {
 
   refreshSavedGrids() {
     this.options.splice(0, this.options.length);
-    Object.entries(localStorage)
-      .filter(([k]) => k.startsWith(Storage.PREFIX))
-      .map(([k, v]) => ({
-        text: k.slice(Storage.PREFIX.length),
-        value: v
+    Object.keys(localStorage)
+      .filter(k => k.startsWith(this.PREFIX))
+      .map(k => k.slice(this.PREFIX.length))
+      .sort(this.comparator)
+      .map(k => ({
+        text: k,
+        value: k
       }))
       .forEach(o => {
         this.options.push(o);
       });
   }
 
-  @Emit()
-  requestGrid() {
-    return;
+  loadFromLocalStorage(name: string) {
+    const jsonData = localStorage.getItem(this.PREFIX + name);
+    if (jsonData) return JSON.parse(jsonData) as SavedGrid;
   }
 
-  @Emit()
   loadGrid() {
-    return JSON.parse(this.selectedSave!) as SavedGrid;
+    if (this.selectedSave)
+      this.gridToLoadSync = this.loadFromLocalStorage(this.selectedSave);
   }
 }
 </script>
