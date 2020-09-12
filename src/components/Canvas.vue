@@ -22,8 +22,14 @@
       :playing="isPlaying"
     ></b-button>
     <output class="ml-2 align-middle text-left" style="width: 7em;">Speed: {{ speed.toFixed(1) }}</output>
-    <RulesModal />
-    <b-button v-b-modal.rules-modal>Choose rules</b-button>
+    <div>
+      <RulesModal :ruleset.sync="ruleset" />
+      <b-button v-b-modal.rules-modal>Choose rules</b-button>
+      <output class="ml-2">
+        Current:
+        <b>{{ generateRuleString(ruleset) }}</b>
+      </output>
+    </div>
   </div>
 </template>
 
@@ -37,6 +43,7 @@ import {
   Watch
 } from "vue-property-decorator";
 import { Grid, SavedGrid } from "../types/grid";
+import { RuleSet } from "../types/ruleset";
 import RulesModal from "./RulesModal.vue";
 
 function getPosition(event: MouseEvent) {
@@ -60,6 +67,7 @@ export default class Canvas extends Vue {
   @PropSync("gridtosave") private gridToSaveSync!: SavedGrid;
   @PropSync("gridrequests") private readonly gridRequestsSync!: number;
   @Ref() private readonly canvas!: HTMLCanvasElement;
+  private readonly ruleset: RuleSet = RulesModal.getDefaultRuleset();
 
   private readonly initialGrid = [
     [],
@@ -110,6 +118,8 @@ export default class Canvas extends Vue {
   private gridSize!: { w: number; h: number };
   private cells!: Grid;
   private isPlaying = false;
+
+  private generateRuleString = RulesModal.generateRuleString;
 
   mounted() {
     this.gridSize = {
@@ -259,7 +269,9 @@ export default class Canvas extends Vue {
 
       col.forEach((cell, y) => {
         const neighbours = this.getNeighbours(x, y);
-        tempCells[x][y] = neighbours === 3 || (cell && neighbours === 2);
+        tempCells[x][y] = cell
+          ? this.ruleset.survival.includes(neighbours)
+          : this.ruleset.birth.includes(neighbours);
       });
     });
     this.cells = tempCells;

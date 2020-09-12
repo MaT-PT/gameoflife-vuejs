@@ -1,6 +1,6 @@
 <template>
   <div class="col-auto mx-5 my-2">
-    <b-form @submit.prevent="gridRequestsSync++">
+    <b-form @submit.stop.prevent="gridRequestsSync++">
       <b-form-group label="Saved grids">
         <b-form-select
           v-model="selectedSave"
